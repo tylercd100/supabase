@@ -1,9 +1,8 @@
 import { MDXProvider } from '@mdx-js/react'
 import 'katex/dist/katex.min.css'
-import { ExternalLink } from 'lucide-react'
 import { NextSeo } from 'next-seo'
 import { useRouter } from 'next/router'
-import { type FC } from 'react'
+import { type FC, useMemo } from 'react'
 
 import { cn } from 'ui'
 
@@ -11,6 +10,7 @@ import components from '~/components'
 import { FooterHelpCalloutType } from '~/components/FooterHelpCallout'
 import GuidesTableOfContents from '~/components/GuidesTableOfContents'
 import { type MenuId } from '~/components/Navigation/NavigationMenu/NavigationMenu'
+import { EditLink, useAddEditLink } from '~/features/EditLink'
 import { LayoutMainContent } from '~/layouts/DefaultLayout'
 import { MainSkeleton } from '~/layouts/MainSkeleton'
 
@@ -35,15 +35,26 @@ interface Props {
 }
 
 const Layout: FC<Props> = (props) => {
-  const { asPath } = useRouter()
   const router = useRouter()
+
+  const editLink = useMemo(
+    () => ({
+      label: 'Main content',
+      href: `https://github.com/${
+        props.editLink || `supabase/supabase/edit/master/apps/docs/pages${router.asPath}.mdx`
+      }
+`,
+    }),
+    [props.editLink, router.asPath]
+  )
+  useAddEditLink(editLink)
 
   const menuId = props.menuId
 
   const EDIT_BUTTON_EXCLUDE_LIST = ['/404']
 
   // page type, ie, Auth, Database, Storage etc
-  const ogPageType = asPath.split('/')[2]
+  const ogPageType = router.asPath.split('/')[2]
   // open graph image url constructor
   const ogImageUrl = encodeURI(
     `https://obuldanrptloktxcffvn.supabase.co/functions/v1/og-images?site=docs${
@@ -55,9 +66,9 @@ const Layout: FC<Props> = (props) => {
     <>
       <NextSeo
         title={`${props.meta?.title} | Supabase Docs`}
-        canonical={props.meta?.canonical ?? `https://supabase.com/docs${asPath}`}
+        canonical={props.meta?.canonical ?? `https://supabase.com/docs${router.asPath}`}
         openGraph={{
-          url: `https://supabase.com/docs${asPath}`,
+          url: `https://supabase.com/docs${router.asPath}`,
           type: 'article',
           siteName: 'Supabase',
           title: `${props.meta?.title} | Supabase Docs`,
@@ -121,18 +132,7 @@ const Layout: FC<Props> = (props) => {
                   <></>
                 ) : (
                   <div className="mt-16 not-prose">
-                    <div>
-                      <a
-                        href={`https://github.com/${
-                          props.editLink ||
-                          `supabase/supabase/edit/master/apps/docs/pages${router.asPath}.mdx`
-                        }
-                    `}
-                        className="text-sm transition flex items-center gap-1 text-scale-1000 hover:text-scale-1200 w-fit"
-                      >
-                        Edit this page on GitHub <ExternalLink size={14} strokeWidth={1.5} />
-                      </a>
-                    </div>
+                    <EditLink />
                   </div>
                 )}
               </article>
